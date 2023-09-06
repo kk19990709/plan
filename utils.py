@@ -22,7 +22,7 @@ def date_diff(start_date, end_date):
     return time_range.days
 
 def daily_interest(interest):
-    return percent(interest) / 365
+    return percent(interest) / 360
 
 def annual_interest(interest):
-    return repercent(interest * 365)
+    return repercent(interest * 360)

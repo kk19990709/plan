@@ -24,10 +24,13 @@ first_day_after_period = date[date['T'] > PERIOD_DATE].iloc[0]['T']  # 2023-10-0
 first_day_before_period = date[date['T'] <= PERIOD_DATE].iloc[-1]['T']  # 2023-09-28
 
 # 如果全在09-26买，要求跨期有90%的资金的话，那占用率就是90%
-# 如果全在09-28买，要求跨期有90%的资金的话，那占用率小于90%，大约是78%
+# 如果全在09-28买，要求跨期有90%的资金的话，那占用率小于90%，大约是75.6%
 min_occupy_rate = MIN_OCCUPY_RATE * \
     date_diff(first_day_before_period, first_day_after_period) / \
     date_diff(START_DATE, first_day_after_period)
+
+print(date_span(START_DATE, first_day_after_period))
+print(date_span(first_day_before_period, first_day_after_period))
 
 # 使用二分法计算保本利率
 def calculate_interest_inter_period(occupy_inter_period, occupy_intra_period):
@@ -35,7 +38,7 @@ def calculate_interest_inter_period(occupy_inter_period, occupy_intra_period):
     l, r = 0, 100
     while r - l > 1e-10:
         m = (l + r) / 2
-        cost = AMOUNT * daily_interest(m - BANK_INTEREST) * occupy_inter_period * date_span(START_DATE, first_day_after_period)
+        cost = AMOUNT * daily_interest(m - BANK_INTEREST) * occupy_inter_period * date_diff(START_DATE, first_day_after_period)
         if earn > cost:  # 赚的多了，抬高利率
             l = m
         else:

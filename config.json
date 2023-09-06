@@ -1,10 +1,10 @@
 {
     "AMOUNT": 1000000000.00,
     "SPAN": 3,
-    "START_DATE": "2023-09-26",
-    "END_DATE": "2023-10-25",
+    "START_DATE": "2023-09-20",
+    "END_DATE": "2023-10-19",
     "PERIOD_DATE": "2023-09-30",
-    "BANK_INTEREST": 2.45,
+    "BANK_INTEREST": 2.5,
     "MIN_OCCUPY_RATE": 0.9,
     "INTER_INTEREST": null,
     "INTRA_INTEREST": 2.1
