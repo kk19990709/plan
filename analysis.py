@@ -21,8 +21,6 @@ date = pd.read_csv('date.csv')
 date['T'] = pd.to_datetime(date['T'])
 date['expire_T'] = pd.to_datetime(date['expire_T'])
 date = date[(date['T'] >= START_DATE) & (date['expire_T'] <= END_DATE)]
-# 因为周末无法买入，9.18开始的话，最晚10.13(周五)买入，根据双休日做调整可以显著增大收益
-# 如果9.21开始，最晚10.18买入
 date.to_csv('date')
 
 T_before_period = date[date['T'] <= PERIOD_DATE].iloc[-1]['T']  # 2023-09-28
@@ -67,8 +65,8 @@ def calculate_interest_inter_period(occupy_inter_period, occupy_intra_period):
     return l
 
 # 生成输入数据
-x = np.linspace(min_occupy_rate, 1.0, 100)
-y = np.linspace(0, 1.0, 100)
+x = np.linspace(min_occupy_rate, 1.0, 101)
+y = np.linspace(0, 1.0, 101)
 X, Y = np.meshgrid(x, y)
 Z = np.zeros_like(X)
 points = []
@@ -80,45 +78,97 @@ for i, j in product(range(X.shape[0]), range(X.shape[1])):
 print(Z)
 
 # 绘制三维曲面
-fig = plt.figure()
-ax = fig.add_subplot(2, 2, 1, projection='3d')
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(3, 2, 1, projection='3d')
 ax.plot_surface(X, Y, Z)
-
-# # 设置坐标轴标签
 ax.set_xlabel('跨期占用率')
 ax.set_ylabel('非跨期占用率')
 ax.set_zlabel('成本利率')
 
 # 绘制 x=1.0 的截面曲面图
-ax2 = fig.add_subplot(2, 2, 2)
+ax = fig.add_subplot(3, 2, 3)
 twoD = np.array([(y, z) for (x, y, z) in points if x == 0.9])
 y, z = zip(*twoD)
-ax2.plot(y, z, label='跨期占用率0.9')
-ax2 = fig.add_subplot(2, 2, 2)
+ax.plot(y, z, label='跨期占用率0.9')
 twoD = np.array([(y, z) for (x, y, z) in points if x == 1.0])
 y, z = zip(*twoD)
-ax2.plot(y, z, label='跨期占用率1.0')
-ax2.legend()
-
-# 设置坐标轴标签
-ax2.set_xlabel('非跨期占用率')
-ax2.set_ylabel('成本利率')
+ax.plot(y, z, label='跨期占用率1.0')
+ax.legend()
+ax.set_xlabel('非跨期占用率')
+ax.set_ylabel('成本利率')
 
 # 绘制 x=0.9 的截面曲面图
-ax3 = fig.add_subplot(2, 2, 3)
-twoD = np.array([(x, z) for (x, y, z) in points if y * 100 // 1 == 33])
+ax = fig.add_subplot(3, 2, 4)
+twoD = np.array([(x, z) for (x, y, z) in points if y == 0.33])
 x, z = zip(*twoD)
-ax3.plot(y, z, label='非跨期占用率0.33')
-twoD = np.array([(x, z) for (x, y, z) in points if y * 100 // 1 == 67])
+ax.plot(y, z, label='非跨期占用率0.33')
+twoD = np.array([(x, z) for (x, y, z) in points if y == 0.67])
 x, z = zip(*twoD)
-ax3.plot(y, z, label='非跨期占用率0.67')
+ax.plot(y, z, label='非跨期占用率0.67')
 twoD = np.array([(x, z) for (x, y, z) in points if y == 1.00])
 x, z = zip(*twoD)
-ax3.plot(y, z, label='非跨期占用率1.00')
-ax3.legend()
+ax.plot(y, z, label='非跨期占用率1.00')
+ax.legend()
+ax.set_xlabel('跨期占用率')
+ax.set_ylabel('成本利率')
 
-# 设置坐标轴标签
-ax3.set_xlabel('跨期占用率')
-ax3.set_ylabel('成本利率')
+# 绘制 x=0.9 的截面曲面图
+ax = fig.add_subplot(3, 2, 5)
+scale = AMOUNT // 100000000
+twoD = np.array([(y * scale, z) for (x, y, z) in points if x == 0.9])
+y, z = zip(*twoD)
+ax.plot(y, z, label=f'跨期日均权益{0.9 * scale:.2f}亿')
+twoD = np.array([(y * scale, z) for (x, y, z) in points if x == 1.0])
+y, z = zip(*twoD)
+ax.plot(y, z, label=f'跨期日均权益{1.0 * scale:.2f}亿')
+ax.legend()
+ax.set_xlabel('非跨期日均权益(亿元)')
+ax.set_ylabel('成本利率')
 
-plt.show()
+# 绘制 x=0.9 的截面曲面图
+ax = fig.add_subplot(3, 2, 6)
+scale = AMOUNT // 100000000
+twoD = np.array([(x * scale, z) for (x, y, z) in points if y * 100 // 1 == 33])
+x, z = zip(*twoD)
+ax.plot(x, z, label=f'非跨期日均权益{0.33 * scale:.2f}亿')
+twoD = np.array([(x * scale, z) for (x, y, z) in points if y * 100 // 1 == 67])
+x, z = zip(*twoD)
+ax.plot(x, z, label=f'非跨期日均权益{0.67 * scale:.2f}亿')
+twoD = np.array([(x * scale, z) for (x, y, z) in points if y == 1.00])
+x, z = zip(*twoD)
+ax.plot(x, z, label=f'非跨期日均权益{1.00 * scale:.2f}亿')
+ax.legend()
+ax.set_xlabel('跨期日均权益(亿元)')
+ax.set_ylabel('成本利率')
+
+plt.savefig('result.png')
+
+
+# 生成输入数据
+x = np.linspace(0, 1.0, 101)
+y = np.linspace(0, 1.0, 101)
+X, Y = np.meshgrid(x, y)
+Z = np.zeros_like(X)
+points = []
+for i, j in product(range(X.shape[0]), range(X.shape[1])):
+    occupy_inter_period = X[i, j]
+    occupy_intra_period = Y[i, j]
+    Z[i, j] = calculate_interest_inter_period(occupy_inter_period, occupy_intra_period)
+    points.append((occupy_inter_period, occupy_intra_period, Z[i, j]))
+
+scale = AMOUNT // 100000000
+columns = [f"{num}亿" for num in range(10, 0, -1)]
+index = [f"{num}亿" for num in range(10, 0, -1)]
+df = pd.DataFrame(columns=columns, index=index)
+for i, j in product(range(10, 0, -1), range(10, 0, -1)):
+    df.loc[f"{i}亿", f"{j}亿"] = Z[i*10, j*10] * 100 // 1 / 100 # 这里不优雅，有时间再改吧
+df.to_csv('first.csv')
+
+df = []
+for interest in range(324, 331):
+    interest /= 100
+    earn = AMOUNT * daily_interest(BANK_INTEREST - INTRA_INTEREST) * 1.0 * len(intra_day)
+    cost = AMOUNT * daily_interest(interest - BANK_INTEREST) * 0.9 * len(inter_day)
+    df.append((interest, (earn - cost) / 10000))
+df = pd.DataFrame(df, columns=['跨期返息率', '最终盈亏(万元)'])
+df.to_csv('second.csv')
